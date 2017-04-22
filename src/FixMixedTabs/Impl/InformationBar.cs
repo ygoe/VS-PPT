@@ -20,6 +20,8 @@ namespace FixMixedTabs
         private bool _isClosed = true;
         private bool _dontShowAgain;
         private readonly ITelemetrySession _telemetrySession;
+        private int _lineNo;
+        private bool _wasVisibleWhitespace;
 
         public InformationBarMargin(IWpfTextView textView, ITextDocument document, IEditorOperations editorOperations, ITextUndoHistory undoHistory)
         {
@@ -34,6 +36,7 @@ namespace FixMixedTabs
             informationBar.Tabify.Click += Tabify;
             informationBar.Untabify.Click += Untabify;
             informationBar.Hide.Click += Hide;
+            informationBar.ShowLine.Click += ShowLine;
             informationBar.DontShowAgain.Click += DontShowAgain;
 
             this.Height = 0;
@@ -73,7 +76,7 @@ namespace FixMixedTabs
 
             int tabSize = _textView.Options.GetOptionValue(DefaultOptions.TabSizeOptionId);
 
-            if (MixedTabsDetector.HasMixedTabsAndSpaces(tabSize, snapshot))
+            if (MixedTabsDetector.HasMixedTabsAndSpaces(tabSize, snapshot, out _lineNo))
             {
                 ShowInformationBar();
             }
@@ -118,6 +121,13 @@ namespace FixMixedTabs
             _telemetrySession.PostEvent("VS/PPT-FixMixedTabs/Hide");
         }
 
+        private void ShowLine(object sender, RoutedEventArgs e)
+        {
+            _textView.Options.SetOptionValue("TextView/UseVisibleWhitespace", true);
+            _operations.GotoLine(_lineNo);
+            _textView.VisualElement.Focus();
+        }
+
         private void DontShowAgain(object sender, RoutedEventArgs e)
         {
             this.DisableInformationBar(false);
@@ -134,6 +144,12 @@ namespace FixMixedTabs
 
             _isClosed = true;
 
+            // Restore previous setting of visible whitespace
+            if (!_wasVisibleWhitespace)
+            {
+                _textView.Options.SetOptionValue("TextView/UseVisibleWhitespace", false);
+            }
+
             // Since we're going to be closing, make sure focus is back in the editor.
             _textView.VisualElement.Focus();
 
@@ -146,6 +162,7 @@ namespace FixMixedTabs
                 return;
 
             _isClosed = false;
+            _wasVisibleWhitespace = _textView.Options.GetOptionValue<bool>("TextView/UseVisibleWhitespace");
             ChangeHeightTo(27, false);
         }
 

@@ -85,7 +85,7 @@ namespace FixMixedTabsUnitTests
         {
             get
             {
-                throw new NotImplementedException();
+                return 0;
             }
         }
 

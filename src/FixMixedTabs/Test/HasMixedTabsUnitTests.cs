@@ -23,8 +23,8 @@ namespace FixMixedTabsUnitTests
         [TestMethod]
         public void NotEnoughSpacesTest()
         {
-            string text = "...ABC\n\tDEF";
-            Assert.IsFalse(MixedTabsDetector.HasMixedTabsAndSpaces(tabSize: 4, snapshot: new MockSnapshot(text)));
+            string text = "   ABC\n\tDEF";
+            Assert.IsTrue(MixedTabsDetector.HasMixedTabsAndSpaces(tabSize: 4, snapshot: new MockSnapshot(text)));
         }
 
         [TestMethod]
@@ -35,10 +35,24 @@ namespace FixMixedTabsUnitTests
         }
 
         [TestMethod]
+        public void SpacesTabsMixedOnOneLine2Test()
+        {
+            string text = "  \tABC";
+            Assert.IsTrue(MixedTabsDetector.HasMixedTabsAndSpaces(tabSize: 2, snapshot: new MockSnapshot(text)));
+        }
+
+        [TestMethod]
+        public void SpacesTabsMixedOnOneLine3Test()
+        {
+            string text = "\t ABC";
+            Assert.IsTrue(MixedTabsDetector.HasMixedTabsAndSpaces(tabSize: 2, snapshot: new MockSnapshot(text)));
+        }
+
+        [TestMethod]
         public void BadTabSizeTest()
         {
             string text = " ABC\n\tDEF";
-            Assert.IsFalse(MixedTabsDetector.HasMixedTabsAndSpaces(tabSize: 0, snapshot: new MockSnapshot(text)));
+            Assert.IsTrue(MixedTabsDetector.HasMixedTabsAndSpaces(tabSize: 0, snapshot: new MockSnapshot(text)));
         }
 
         [TestMethod]
@@ -51,8 +65,15 @@ namespace FixMixedTabsUnitTests
         [TestMethod]
         public void TabsNotAtLineStartTest()
         {
-            string text = "A\tABC\n..DEF";
+            string text = "A\tABC\n  DEF";
             Assert.IsFalse(MixedTabsDetector.HasMixedTabsAndSpaces(tabSize: 2, snapshot: new MockSnapshot(text)));
+        }
+
+        [TestMethod]
+        public void UnicodeWhitespaceTest()
+        {
+            string text = "\u00A0ABC";
+            Assert.IsTrue(MixedTabsDetector.HasMixedTabsAndSpaces(tabSize: 2, snapshot: new MockSnapshot(text)));
         }
     }
 }
