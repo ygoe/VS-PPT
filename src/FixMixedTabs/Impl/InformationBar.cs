@@ -22,6 +22,7 @@ namespace FixMixedTabs
         private readonly ITelemetrySession _telemetrySession;
         private int _lineNo;
         private bool _wasVisibleWhitespace;
+        private InformationBarControl _informationBar;
 
         public InformationBarMargin(IWpfTextView textView, ITextDocument document, IEditorOperations editorOperations, ITextUndoHistory undoHistory)
         {
@@ -32,15 +33,15 @@ namespace FixMixedTabs
 
             _telemetrySession = TelemetrySessionForPPT.Create(this.GetType().Assembly);
 
-            var informationBar = new InformationBarControl();
-            informationBar.Tabify.Click += Tabify;
-            informationBar.Untabify.Click += Untabify;
-            informationBar.Hide.Click += Hide;
-            informationBar.ShowLine.Click += ShowLine;
-            informationBar.DontShowAgain.Click += DontShowAgain;
+            _informationBar = new InformationBarControl();
+            _informationBar.Tabify.Click += Tabify;
+            _informationBar.Untabify.Click += Untabify;
+            _informationBar.Hide.Click += Hide;
+            _informationBar.ShowLine.Click += ShowLine;
+            _informationBar.DontShowAgain.Click += DontShowAgain;
 
             this.Height = 0;
-            this.Content = informationBar;
+            this.Content = _informationBar;
             this.Name = MarginName;
 
             document.FileActionOccurred += FileActionOccurred;
@@ -163,7 +164,21 @@ namespace FixMixedTabs
 
             _isClosed = false;
             _wasVisibleWhitespace = _textView.Options.GetOptionValue<bool>("TextView/UseVisibleWhitespace");
-            ChangeHeightTo(27, false);
+
+            // Highlight the option that the editor defaults to
+            bool useTabs = !_textView.Options.GetOptionValue<bool>("Tabs/ConvertTabsToSpaces");
+            if (useTabs)
+            {
+                _informationBar.Tabify.FontWeight = FontWeights.Bold;
+                _informationBar.Untabify.FontWeight = FontWeights.Normal;
+            }
+            else
+            {
+                _informationBar.Tabify.FontWeight = FontWeights.Normal;
+                _informationBar.Untabify.FontWeight = FontWeights.Bold;
+            }
+
+            ChangeHeightTo(26, false);
         }
 
         private void ChangeHeightTo(double newHeight, bool instant)
